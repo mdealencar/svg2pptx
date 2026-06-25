@@ -56,6 +56,7 @@ where = ["src"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+pythonpath = ["src"]
 
 [tool.coverage.run]
 source = ["src/svg2pptx"]
