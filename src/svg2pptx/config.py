@@ -21,7 +21,11 @@ class Config:
         preserve_groups: Whether to maintain SVG group structure in PowerPoint.
             Defaults to False (shapes are ungrouped).
         flatten_groups: Whether to flatten all groups into individual shapes.
-            Defaults to True (shapes are ungrouped for easier editing).
+            Defaults to False (nested SVG group structure is preserved).
+        group_output: Whether to wrap all top-level shapes in a single
+            PowerPoint group so the whole drawing can be selected/moved as one
+            unit. Defaults to True. No group is created when the SVG has a
+            single top-level element.
         default_fill: Default fill color for shapes without fill specified.
             Use "none" for transparent, or a hex color like "#000000".
         default_stroke: Default stroke color when not specified.
@@ -39,7 +43,8 @@ class Config:
     offset_y: int = 0
     curve_tolerance: float = 1.0
     preserve_groups: bool = False
-    flatten_groups: bool = True
+    flatten_groups: bool = False
+    group_output: bool = True
     default_fill: str = "none"
     default_stroke: str = "none"
     default_stroke_width: float = 1.0

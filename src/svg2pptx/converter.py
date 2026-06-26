@@ -186,9 +186,17 @@ class SVGConverter:
         # Use average scale for uniform scaling
         effective_scale = (vb_scale_x + vb_scale_y) / 2
 
+        # Optionally wrap all top-level shapes in a single PowerPoint group so
+        # the whole drawing can be selected/moved as one unit. Skip when there
+        # is a single top-level element (nothing to group) or no elements at
+        # all (an empty group is invalid in OOXML).
+        target_shapes = slide.shapes
+        if self.config.group_output and len(svg_doc.elements) > 1:
+            target_shapes = slide.shapes.add_group_shape().shapes
+
         for element in svg_doc.elements:
             add_element_to_shapes(
-                slide.shapes,
+                target_shapes,
                 element,
                 vb_offset_x,
                 vb_offset_y,
