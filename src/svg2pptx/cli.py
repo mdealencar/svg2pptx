@@ -122,15 +122,23 @@ Examples:
     parser.add_argument(
         "--flatten",
         action="store_true",
-        default=True,
-        help="Flatten groups into individual shapes (default: True)",
+        default=False,
+        help="Flatten SVG groups into individual shapes",
     )
 
     parser.add_argument(
         "--no-flatten",
         action="store_false",
         dest="flatten",
-        help="Preserve group structure from SVG",
+        help="Preserve group structure from SVG (default)",
+    )
+
+    parser.add_argument(
+        "--no-group",
+        action="store_false",
+        dest="group_output",
+        default=True,
+        help="Do not wrap all top-level shapes in a single PowerPoint group",
     )
 
     parser.add_argument(

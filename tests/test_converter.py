@@ -6,6 +6,7 @@ import tempfile
 import os
 
 from pptx import Presentation
+from pptx.enum.shapes import MSO_SHAPE_TYPE
 
 from svg2pptx import svg_to_pptx, SVGConverter, Config
 
@@ -63,9 +64,11 @@ class TestSVGConverter:
         
         converter = SVGConverter()
         prs = converter.convert_string(svg)
-        
-        # Should have 3 shapes
-        assert len(prs.slides[0].shapes) >= 3
+
+        # By default the 3 top-level shapes are wrapped in a single group.
+        top = prs.slides[0].shapes
+        assert len(top) == 1
+        assert len(top[0].shapes) >= 3
 
 
 class TestConvertFile:
@@ -179,7 +182,8 @@ class TestConfig:
         config = Config()
         assert config.scale == 1.0
         assert config.preserve_groups is False
-        assert config.flatten_groups is True
+        assert config.flatten_groups is False
+        assert config.group_output is True
         assert config.disable_shadows is True
 
     def test_custom_config(self):
@@ -191,3 +195,40 @@ class TestConfig:
         assert config.scale == 2.0
         assert config.curve_tolerance == 0.5
         assert config.preserve_groups is False
+
+
+class TestGroupOutput:
+    """Tests for wrapping top-level shapes in a single PowerPoint group."""
+
+    MULTI_SHAPE_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+        <rect x="10" y="10" width="50" height="50" fill="red"/>
+        <circle cx="120" cy="35" r="25" fill="blue"/>
+    </svg>'''
+
+    SINGLE_SHAPE_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+        <rect x="10" y="10" width="80" height="80" fill="red"/>
+    </svg>'''
+
+    def test_multiple_top_level_shapes_are_grouped(self):
+        """By default, multiple top-level shapes are wrapped in one group."""
+        prs = SVGConverter().convert_string(self.MULTI_SHAPE_SVG)
+        top = prs.slides[0].shapes
+        assert len(top) == 1
+        group = top[0]
+        assert group.shape_type == MSO_SHAPE_TYPE.GROUP
+        assert len(group.shapes) == 2
+
+    def test_single_top_level_element_is_not_grouped(self):
+        """A single top-level element is added directly, without a group."""
+        prs = SVGConverter().convert_string(self.SINGLE_SHAPE_SVG)
+        top = prs.slides[0].shapes
+        assert len(top) == 1
+        assert top[0].shape_type != MSO_SHAPE_TYPE.GROUP
+
+    def test_group_output_disabled(self):
+        """With group_output=False, shapes are added flat to the slide."""
+        config = Config(group_output=False)
+        prs = SVGConverter(config=config).convert_string(self.MULTI_SHAPE_SVG)
+        top = prs.slides[0].shapes
+        assert len(top) == 2
+        assert all(s.shape_type != MSO_SHAPE_TYPE.GROUP for s in top)
