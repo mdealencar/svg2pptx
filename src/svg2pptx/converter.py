@@ -191,7 +191,8 @@ class SVGConverter:
         # is a single top-level element (nothing to group) or no elements at
         # all (an empty group is invalid in OOXML).
         target_shapes = slide.shapes
-        if self.config.group_output and len(svg_doc.elements) > 1:
+        wrapped = self.config.group_output and len(svg_doc.elements) > 1
+        if wrapped:
             target_shapes = slide.shapes.add_group_shape().shapes
 
         for element in svg_doc.elements:
@@ -204,3 +205,9 @@ class SVGConverter:
                 flatten=self.config.flatten_groups,
                 config=self.config,
             )
+
+        # Freeforms are injected directly into the spTree and don't trigger
+        # python-pptx's extent recalculation, so a freeform-only wrapper group
+        # would otherwise keep a degenerate zero-size bounding box.
+        if wrapped:
+            target_shapes._recalculate_extents()  # pyright: ignore[reportPrivateUsage]
